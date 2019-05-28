@@ -3,10 +3,16 @@ const csvSync = require('csv-parse/lib/sync');
 const { createObjectCsvWriter } = require('csv-writer');
 const mastodon = require('mastodon');
 const moment = require('moment');
+const chalk = require('chalk');
+
+const logSuccess = chalk.green.bold;
+const logWarning = chalk.yellow.bold;
+const logDanger = chalk.red.bold;
 
 const config = require('./config');
 const csv = fs.readFileSync('./following_accounts.csv');
 const following = JSON.parse(JSON.stringify(csvSync(csv)));
+const followingCount = following.length - 1;
 const M = new mastodon({
     access_token: config.token,
     api_url: `https://${config.domain}/api/v1/`,
@@ -27,10 +33,13 @@ const result = {
     "removed": [],
     "failed": []
 };
+let logCount = '';
 
 function run(num) {
     const acct = following[num][0];
     const domain = acct.split('@')[1];
+
+    logCount = `${num} / ${followingCount}`;
 
     // これアカウントじゃねえ
     if (!domain) {
@@ -40,7 +49,7 @@ function run(num) {
 
     // configで指定した削除対象インスタンス
     if (config.unfollow_domains.indexOf(domain) !== -1 && !config.check_moved_account) {
-        console.log('[removed:domain]', acct);
+        console.log(logCount, logWarning('[removed:domain]'), acct);
         result.removed.push(`${acct}: unfollow_domainsで指定されたインスタンスのアカウント`);
         next(num);
         return;
@@ -50,13 +59,19 @@ function run(num) {
         .then(id => getLastPost(id, acct))
         .then(() => {
             if (config.unfollow_domains.indexOf(domain) !== -1) {
-                console.log('[removed:domain]', acct);
+                console.log(logCount, logWarning('[removed:domain]'), acct);
                 result.removed.push(`${acct}: unfollow_domainsで指定されたインスタンスのアカウント`);
                 next(num);
                 return;
             }
 
-            console.log('[OK]', acct);
+            if (result.success.indexOf(acct) !== -1) {
+                console.log(logCount, logSuccess('[OK]'), acct, 'is already registered.');
+                next(num);
+                return;
+            }
+
+            console.log(logCount, logSuccess('[OK]'), acct);
             result.success.push(acct);
             result.success_data.push({
                 acct,
@@ -81,11 +96,11 @@ function next(num) {
 
 function write() {
     console.log('====== RESULT ======');
-    console.log('success:');
+    console.log(logSuccess(`== success: (${result.success.length})`));
     console.log(result.success.join('\n'));
-    console.log('removed:');
+    console.log(logWarning(`== removed: (${result.removed.length})`));
     console.log(result.removed.join('\n'));
-    console.log('failed:');
+    console.log(logDanger(`== failed: (${result.failed.length})`));
     console.log(result.failed.join('\n'));
 
     csvWriter.writeRecords(result.success_data)
@@ -107,7 +122,7 @@ function acctToAccountId(acct, num) {
                 if (account.acct === account.username) account.acct += `@${config.domain}`;
                 if (account.acct === acct) {
                     if (account.moved && config.check_moved_account) {
-                        console.log('[removed:moved]', 'acctToAccountId', acct);
+                        console.log(logCount, logWarning('[removed:moved]'), 'acctToAccountId', acct);
                         result.removed.push(`${acct}: moved -> ${account.moved.acct}`);
 
                         if (config.check_moved_account === 'check') {
@@ -131,11 +146,12 @@ function acctToAccountId(acct, num) {
                 }
             }
 
-            console.log('[failed:unknown]', 'acctToAccountId', acct);
+            console.log(logCount, logDanger('[failed:unknown]'), 'acctToAccountId', acct);
             result.failed.push(`${acct}: アカウントIDへの変換時に見つかりませんでした`);
             reject();
         }).catch(resp => {
-            console.log('[failed:API]', 'acctToAccountId', acct, resp);
+            console.log(resp);
+            console.log(logCount, logDanger('[failed:API]'), 'acctToAccountId', acct, chalk.green.underline('== 1分後にリトライします =='));
             setTimeout(() => {
                 acctToAccountId(acct)
                     .then(id => resolve(id))
@@ -154,7 +170,7 @@ function getLastPost(accountId, acct) {
 
             const post = data[0];
             if (!post) {
-                console.log('[failed:unknown]', 'getLastPost', acct);
+                console.log(logCount, logDanger('[failed:unknown]'), 'getLastPost', acct);
                 result.failed.push(`${acct}: 投稿がみつかりません`);
                 reject();
                 return;
@@ -166,11 +182,12 @@ function getLastPost(accountId, acct) {
                 return;
             }
 
-            console.log('[removed:period]', 'getLastPost', acct);
+            console.log(logCount, logWarning('[removed:period]'), 'getLastPost', acct);
             result.removed.push(`${acct}: unactive_periodで指定した期間以上投稿していないアカウント`);
             reject();
         }).catch(resp => {
-            console.log('[failed:API]', 'getLastPost', acct, resp);
+            console.log(resp);
+            console.log(logCount, logDanger('[failed:API]'), 'getLastPost', acct, chalk.green.underline('== 1分後にリトライします =='));
             setTimeout(() => {
                 getLastPost(accountId, acct)
                     .then(() => resolve())
