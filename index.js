@@ -6,7 +6,7 @@ const moment = require('moment');
 
 const config = require('./config');
 const csv = fs.readFileSync('./following_accounts.csv');
-const following = csvSync(csv);
+const following = JSON.parse(JSON.stringify(csvSync(csv)));
 const M = new mastodon({
     access_token: config.token,
     api_url: `https://${config.domain}/api/v1/`,
@@ -39,16 +39,23 @@ function run(num) {
     }
 
     // configで指定した削除対象インスタンス
-    if (config.unfollow_domains.indexOf(domain) !== -1) {
+    if (config.unfollow_domains.indexOf(domain) !== -1 && !config.check_moved_account) {
         console.log('[removed:domain]', acct);
         result.removed.push(`${acct}: unfollow_domainsで指定されたインスタンスのアカウント`);
         next(num);
         return;
     }
 
-    acctToAccountId(acct)
+    acctToAccountId(acct, num)
         .then(id => getLastPost(id, acct))
         .then(() => {
+            if (config.unfollow_domains.indexOf(domain) !== -1) {
+                console.log('[removed:domain]', acct);
+                result.removed.push(`${acct}: unfollow_domainsで指定されたインスタンスのアカウント`);
+                next(num);
+                return;
+            }
+
             console.log('[OK]', acct);
             result.success.push(acct);
             result.success_data.push({
@@ -87,7 +94,7 @@ function write() {
         });
 }
 
-function acctToAccountId(acct) {
+function acctToAccountId(acct, num) {
     return new Promise((resolve, reject) => {
         M.get('search', {
             q: acct,
@@ -96,9 +103,29 @@ function acctToAccountId(acct) {
         }).then(resp => {
             const data = resp.data;
 
-            for(let account of data.accounts) {
+            for (let account of data.accounts) {
                 if (account.acct === account.username) account.acct += `@${config.domain}`;
                 if (account.acct === acct) {
+                    if (account.moved && config.check_moved_account) {
+                        console.log('[removed:moved]', 'acctToAccountId', acct);
+                        result.removed.push(`${acct}: moved -> ${account.moved.acct}`);
+
+                        if (config.check_moved_account === 'check') {
+                            following.splice(num + 1, 0, [
+                                account.moved.acct,
+                                following[num][1] // show boosts
+                            ]);
+                        } else if (config.check_moved_account === 'force') {
+                            result.success.push(account.moved.acct);
+                            result.success_data.push({
+                                acct: account.moved.acct,
+                                boost: following[num][1]
+                            });
+                        }
+
+                        reject();
+                    }
+
                     resolve(account.id);
                     return;
                 }

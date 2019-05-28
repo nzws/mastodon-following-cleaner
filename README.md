@@ -6,6 +6,7 @@
 
 - 消滅予定, 消滅したインスタンスのユーザを消す機能
 - 一定期間投稿(ブースト, 返信含む)をしていないユーザを消す機能
+- moved を見てアカウントを置き換えする機能
 
 ## 使い方
 
@@ -27,7 +28,8 @@
   "unfollow_domains": ["消したいインスタンス", "(配列可)"],
   "unactive_period": {
     "months": 1
-  }
+  },
+  "check_moved_account": "check"
 }
 ```
 
@@ -35,6 +37,13 @@
 
 詳しくはmoment.jsのドキュメントを参考に設定してください。
 https://momentjs.com/docs/#/manipulating/add/
+
+`check_moved_account` にはアカウント引っ越しが設定されていた場合に置き換えるか指定できます。   
+ただし、unfollow_domains と unactive_period を無視してチェックするため、確認速度が遅くなります。 
+
+- `"check"`: 元アカウントの引っ越し先を unfollow_domains と unactive_period をチェックした上、さらにまた引っ越し先に引っ越し先が指定されていないか確認します。引っ越し先が途切れるまで永遠にチェックします。 (遅)
+- `"force"`: 元アカウントの引っ越し先があれば強制的に追加します。引っ越し先の unfollow_domains と unactive_period はチェックしません。また、引っ越し先に引っ越し先があっても無視します。
+- `false`: 引っ越し先を考慮しません。 (速)
 
 #### 依存関係をインストール
 
@@ -58,6 +67,8 @@ yarn start
 Created result.csv!!!✨
 ```
 と表示されれば完了です。 `result.csv` が新しいフォローインポートになります。
+
+***
 
 なんかよくわからないけど1行目がカンマだけだったら、
 ```

@@ -4,5 +4,6 @@
   "unfollow_domains": ["dead_instance.domain"],
   "unactive_period": {
     "months": 1
-  }
+  },
+  "check_moved_account": false
 }
