@@ -15,6 +15,7 @@
 
 - 今のアカウントから取り出したフォローエクスポートを `following_accounts.csv` として
 - `config.sample.json` を `config.json` に名前変更して
+
 置いてください。
 
 #### config.json を書く
@@ -47,14 +48,14 @@ yarn install
 yarn start
 ```
 
-> かなり時間かかるので気長に待ちましょう。
+> かなり時間かかるので気長に待ちましょう。   
 > また、フォロー数が異常に多い場合はAPIのレートリミットに引っかかる場合があります。その場合でも1分後にやり直すようになってる...はず
 
 #### 完了
 
 コンソールに
 ```
-Create result.csv!!!✨
+Created result.csv!!!✨
 ```
 と表示されれば完了です。 `result.csv` が新しいフォローインポートになります。
 

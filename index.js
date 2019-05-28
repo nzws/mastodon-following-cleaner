@@ -83,7 +83,7 @@ function write() {
 
     csvWriter.writeRecords(result.success_data)
         .then(() => {
-            console.log('Create result.csv!!!✨');
+            console.log('Created result.csv!!!✨');
         });
 }
 
