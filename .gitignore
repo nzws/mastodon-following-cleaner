@@ -59,3 +59,10 @@ typings/
 
 # next.js build output
 .next
+
+.vscode
+.idea
+
+following_accounts.csv
+result.csv
+config.json

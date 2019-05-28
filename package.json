@@ -1,0 +1,18 @@
+{
+  "name": "mastodon-following-cleaner",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://yuzulabo@github.com/yuzulabo/mastodon-following-cleaner.git",
+  "author": "nzws <git@nzws.me>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "csv-parse": "^4.4.1",
+    "csv-writer": "^1.3.0",
+    "mastodon": "^1.2.2",
+    "moment": "^2.24.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
