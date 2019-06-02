@@ -21,8 +21,8 @@ const period = moment().subtract(config.unactive_period);
 const csvWriter = createObjectCsvWriter({
     path: `${__dirname}/result.csv`,
     header: [
-        { id: 'acct', name: 'Account address' },
-        { id: 'boost', name: 'Show boosts' }
+        { id: 'acct', title: 'Account address' },
+        { id: 'boost', title: 'Show boosts' }
     ],
     encoding: 'utf8'
 });

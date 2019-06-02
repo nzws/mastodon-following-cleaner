@@ -1,6 +1,6 @@
 {
   "name": "mastodon-following-cleaner",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "main": "index.js",
   "repository": "https://yuzulabo@github.com/yuzulabo/mastodon-following-cleaner.git",
   "author": "nzws <git@nzws.me>",

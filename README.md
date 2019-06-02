@@ -71,13 +71,3 @@ yarn start
 Created result.csv!!!✨
 ```
 と表示されれば完了です。 `result.csv` が新しいフォローインポートになります。
-
-***
-
-なんかよくわからないけど1行目がカンマだけだったら、
-```
-Account address,Show boosts
-```
-に変えてあげてください。
-
-![Imgur](https://i.imgur.com/Ph7620Y.png)
